@@ -1,5 +1,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "pwm_tone.h"
+#include <chrono>
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -14,18 +15,13 @@
                     beat : this param is beat value. (1..16) 1 means 1/16 beat
    * @retval    None
    */
-void Tune(PwmOut name, int period, int beat)
+void Tune(PwmOut& name, int period, int beat)
 {  
     int delay,count;
     delay = beat*63;
     name.period_us(period);
     name.write(0.50f); // 50% duty cycle
-
-    //for (int i=0; i<10000000;i++){ __NOP();count++;}
-ThisThread::sleep_for(63ms);
-    //thread_sleep_for(delay);
-    //wait_us(delay*1000); // 1 beat
-    //name.period_us(0); // Sound off
+    ThisThread::sleep_for(std::chrono::milliseconds(delay));
     name=0;
 }
 
@@ -35,16 +31,15 @@ ThisThread::sleep_for(63ms);
                     period : this param is tune value. (C_3...B_5)
                     beat : this param is beat value. (1..16) 1 means 1/16 beat
    * @retval    None
-   */
-void Auto_tunes(PwmOut name, int period, int beat)
+*/
+
+void Auto_tunes(PwmOut& name, int period, int beat)
 {    
     int delay;
-    
     delay = beat*63;
     name.period_us(period);
     name.write(0.50f); // 50% duty cycle
     thread_sleep_for(delay);
-    //wait_us(delay*1000);
 }
 
 /**
@@ -52,7 +47,7 @@ void Auto_tunes(PwmOut name, int period, int beat)
    * @param  name : Choose the PwmOut
    * @retval    None
    */
-void Stop_tunes(PwmOut name)
+void Stop_tunes(PwmOut& name)
 {
     name.period_us(0);
 }

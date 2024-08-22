@@ -23,8 +23,11 @@ PROJ100_Encoder left_encoder(ENCODER_PIN_LEFT,PULSES_PER_ROTATION);     //Instan
 
 UnbufferedSerial ser(USBTX,USBRX,115200);   // Serial object for printing info
 
+
+
 int main ()
 {
+
     // Clear the terminal and print an intro
     printf("\033[2J\033[1;1H\r\n");
     printf("Plymouth University PROJ100 2023/24 Optical Encoder Demonstration\n\r");
@@ -55,13 +58,14 @@ int main ()
     // If these lines are left in the lines below will never run
     /*************************************************/
 
-    // simple_test();
-    speed_test();
+   // simple_test();
+   // speed_test();
 
     while(true){
+        jingle_bells(2);
 
         // Write the parts of your code which should run in a loop between here..
-
+        
 
 
 
