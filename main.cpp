@@ -1,3 +1,5 @@
+#define USER_BUTTON PC_13
+
 #include "mbed.h"
 #include "motor.h"
 #include "tunes.h"
@@ -5,11 +7,11 @@
 #include "PROJ100_Encoder.h"
 #include "PROJ100_Encoder_Tests.h"
 
-#define TIME_PERIOD 10             //Constant compiler Values here 10 equates to 10ms or 100Hz base Frequency
+#define TIME_PERIOD                 10      //Constant compiler Values here 10 equates to 10ms or 100Hz base Frequency
 #define ENCODER_PIN_LEFT            D8
 #define ENCODER_PIN_RIGHT           D6 
 #define PULSES_PER_ROTATION         20
-#define DEBOUNCE_US                 30000
+#define DEBOUNCE_US                 26000
 
 DigitalIn microswitch1(D4);         //Instance of the DigitalIn class called 'microswitch1'
 DigitalIn microswitch2(D3);         //Instance of the DigitalIn class called 'microswitch2'
@@ -24,13 +26,12 @@ PROJ100_Encoder left_encoder(ENCODER_PIN_LEFT,PULSES_PER_ROTATION);     //Instan
 UnbufferedSerial ser(USBTX,USBRX,115200);   // Serial object for printing info
 
 
-
 int main ()
 {
 
     // Clear the terminal and print an intro
     printf("\033[2J\033[1;1H\r\n");
-    printf("Plymouth University PROJ100 2023/24 Optical Encoder Demonstration\n\r");
+    printf("Plymouth University PROJ100 2024/25 Optical Encoder Demonstration\n\r");
 
     // Set the PWM frequency
     Wheel.Period_in_ms(TIME_PERIOD);                
@@ -53,16 +54,46 @@ int main ()
     left_encoder.start();
     right_encoder.start();
 
+  
     /*********************ENCODER TESTS***************/
     // These contain while(1) loops so ensure that they are removed or commented out when running your own code
     // If these lines are left in the lines below will never run
+    // These are examples only, and not all functionality within them is required for your coursework
+    // HINT: you don't need to measure speed
+    // Check PROJ100_Encoder_Tests.cpp for the code for these functions
     /*************************************************/
 
-   // simple_test();
-   // speed_test();
+    // simplest_test();
+    // simple_test();
+    rotations_test();
+    // ave_pulse_time_test();
+    // speed_test();
+    
+
+
+    //*******Demostration of the pwm_tune library***********//
+    jingle_bells(2);
+    close_encounter(2);
+
+
 
     while(true){
-        jingle_bells(2);
+
+
+        // The following lines demostrate the use of the microswitches.
+        // You should remove these from your final solution 
+        // You could maybe find a better use for the switches(collision detection?)
+        if(microswitch1.read()==1){
+            // If the first switch is pressed print Hello
+            printf("Hello\n");
+        }
+        if(microswitch2.read()==1){
+            // If the second switch is pressed print Goodbye
+            printf("Goodbye\n");
+        }
+        wait_us(500000);
+
+
 
         // Write the parts of your code which should run in a loop between here..
         

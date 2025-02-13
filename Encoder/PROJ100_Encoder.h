@@ -15,13 +15,13 @@ class PROJ100_Encoder{
         InterruptIn _Encoder_Pin;
         DigitalOut* out_pin = nullptr;
         Timer _pulse_timer;
-        Semaphore lock;
+        Mutex lock;
         EventQueue equeue;
         Timeout _stationary_timer;
         
         Mail<uint32_t,4> timing_mail;
 
-        volatile uint32_t _debounce_time_us = 2000;
+        volatile uint32_t _debounce_time_us = 26000;
         volatile uint32_t _last_pulse_time=0;
         volatile bool _new_timing_data_available = false;
         volatile bool _is_stationary = true;

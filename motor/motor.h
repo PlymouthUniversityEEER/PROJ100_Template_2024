@@ -23,6 +23,6 @@ private:
     PwmOut pin4;
 };
 
-//int motor(float speedA, float speedB);
+
 
 #endif

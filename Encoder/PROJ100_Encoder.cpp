@@ -12,7 +12,7 @@ PROJ100_Encoder::PROJ100_Encoder(PinName Output_Pin, uint16_t pulses_per_rotatio
     _pulses_per_rotation = pulses_per_rotation;
     _stationary_millis = (uint16_t) (20000/pulses_per_rotation);
     _timing_thread.start(callback(this,&PROJ100_Encoder::timingUpdateThreadFunc));
-    _timing_thread.set_priority(osPriorityAboveNormal);
+    _timing_thread.set_priority(osPriorityHigh);
     _stationary_thread.start(callback(&equeue, &EventQueue::dispatch_forever));
     _stationary_thread.set_priority(osPriorityAboveNormal);
 }
@@ -38,7 +38,7 @@ void PROJ100_Encoder::PROJ100_Encoder::encoderISR(){
         out_pin->write(!out_pin->read());
     }
     // Read the timer then reset it
-    uint32_t tick_us = std::chrono::duration_cast<std::chrono::microseconds>(_pulse_timer.elapsed_time()).count();//was "_pulse_timer.read_us();"
+    uint32_t tick_us = _pulse_timer.read_us();
     _pulse_timer.reset();
 
     // Place the data into the mailbox 
@@ -70,8 +70,8 @@ void PROJ100_Encoder::timingUpdateThreadFunc(){
             // Free the memory 
             timing_mail.free(m);
             // We need to update shared variables to aquire a mutex
-            if(lock.try_acquire_for(20ms)){
-                if(time > _debounce_time_us){
+            if(lock.trylock_for(20ms)){
+                if(time > _debounce_time_us){ // TODO: Fix this!
                     // Update the last pulse time
                    setLastPulseTimeUs(time);
                    // Set stationary detector to false (wheel is not stationary)
@@ -82,7 +82,7 @@ void PROJ100_Encoder::timingUpdateThreadFunc(){
                     }   
                 }
                 // Release the mutex
-                lock.release();
+                lock.unlock();
             }
         // Reattach the stationary detection timer
         _stationary_timer.attach(callback(this,&PROJ100_Encoder::stationaryHandler),std::chrono::milliseconds(_stationary_millis));
@@ -110,7 +110,6 @@ void PROJ100_Encoder::stationaryHandler(){
 void PROJ100_Encoder::start(){
     _pulse_timer.start();
     _Encoder_Pin.fall(callback(this,&PROJ100_Encoder::encoderISR));
-    lock.release();
     _stationary_timer.attach(callback(this,&PROJ100_Encoder::stationaryHandler),std::chrono::milliseconds(_stationary_millis));
 }
 
@@ -139,12 +138,14 @@ void PROJ100_Encoder::reset(){
     This helps to remove noise from false detection
 */
 bool PROJ100_Encoder::setDebounceTimeUs(uint32_t new_us){
-    if(lock.try_acquire_for(10ms)){
+    //This seems to have issues so the else is a bit of a hack
+    if(lock.trylock_for(20ms)){
         _debounce_time_us = new_us;
-        lock.release();
+        lock.unlock();
         return 1;
     }
     else{
+        _debounce_time_us = new_us; // TODO: Fix this!
         return 0;
     }
 }
@@ -154,13 +155,14 @@ bool PROJ100_Encoder::setDebounceTimeUs(uint32_t new_us){
     Public member function to return the current debounce time in us
 */    
 uint32_t PROJ100_Encoder::getDebounceTimeUs(){
-    if(lock.try_acquire_for(10ms)){
+    //This seems to have issues so the else is a bit of a hack
+    if(lock.trylock_for(20ms)){
         bool dbt = _debounce_time_us;
-        lock.release();
+        lock.unlock();
         return dbt;
     }
     else{
-        return 0;
+        return _debounce_time_us; // TODO: Fix this!
     }
 }
 
@@ -174,7 +176,7 @@ uint32_t PROJ100_Encoder::getDebounceTimeUs(){
 */
 int32_t PROJ100_Encoder::getLastPulseTimeUs(){
     int32_t rval=-1;
-    if(lock.try_acquire_for(30ms)){
+    if(lock.trylock_for(20ms)){
         if(_is_stationary){
             rval = -2;
         }
@@ -185,7 +187,7 @@ int32_t PROJ100_Encoder::getLastPulseTimeUs(){
             rval = _last_pulse_time;
             _new_timing_data_available=false;
         }
-        lock.release();
+        lock.unlock();
     }
     return rval;
 }
@@ -198,7 +200,7 @@ int32_t PROJ100_Encoder::getLastPulseTimeUs(){
 */
 int8_t PROJ100_Encoder::pulseReceived(){
     int32_t rval=-1;
-    if(lock.try_acquire_for(10ms)){
+    if(lock.trylock_for(20ms)){
         if(_is_stationary){
             rval = -2;
         }
@@ -209,7 +211,7 @@ int8_t PROJ100_Encoder::pulseReceived(){
             rval = 1;
             _new_timing_data_available=false;
         }
-        lock.release();
+        lock.unlock();
     }
     return rval;
 }
@@ -240,9 +242,9 @@ bool PROJ100_Encoder::waitForPulse(uint32_t timeout_ms){
     and cleared when a pulse is received
 */
 bool PROJ100_Encoder::isStationary(){
-    if(lock.try_acquire_for(20ms)){
+    if(lock.trylock_for(20ms)){
         bool stat = _is_stationary;
-        lock.release();
+        lock.unlock();
         return stat;
     }
     else{
